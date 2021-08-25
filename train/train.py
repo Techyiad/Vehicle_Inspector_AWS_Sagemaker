@@ -85,7 +85,7 @@ def save_model(MODEL_DIR):
     # create a TensorFlow SavedModel for deployment to a SageMaker endpoint with TensorFlow Serving               
     save_time = time.strftime("%m%d%H%M%S", time.gmtime())
     model_dir = os.environ["SM_MODEL_DIR"]
-    tf.saved_model.save(model, f'{model_dir}/{save_time}' )
+    tf.keras_model.save(f'{model_dir}/{save_time}' )
     
 
 def train(model, train_set,test_set, epochs, layers,config):
