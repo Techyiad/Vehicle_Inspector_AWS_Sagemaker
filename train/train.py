@@ -4,21 +4,29 @@ import json
 import numpy as np
 import time
 import argparse
-
-# !python Mask_RCNN/setup.py clean --all install
+import keras
+import tensorflow as tf
 
 ROOT_DIR = os.path.abspath("Mask_RCNN/")
-# Import Mask RCNN
 sys.path.append(ROOT_DIR)
 import mrcnn.model as modellib
 
 from model import Mask_RCNNmodel
 from preprocessor import Dataset
-from utils import InferenceConfig
+from utils import InferenceConfig 
+
+from model_serving import *
+
+try:
+    from tensorflow.python.util import module_wrapper as deprecation
+except ImportError:
+    from tensorflow.python.util import deprecation_wrapper as deprecation
+deprecation._PER_MODULE_WARNING_LIMIT = 0
 
 
-
-
+DEVICE = "/cpu:0"
+inference_config = InferenceConfig()
+    
 
 def parse_args():
 
@@ -30,6 +38,7 @@ def parse_args():
     parser.add_argument('--pretrained_weight', type=str,   default='imagenet')
     
     # data directories
+    parser.add_argument('--model_dir', type=str)
     parser.add_argument('--training', type=str, default=os.environ.get('SM_CHANNEL_TRAINING'))
     parser.add_argument('--validation', type=str, default=os.environ.get('SM_CHANNEL_VALIDATION'))
 
@@ -63,29 +72,32 @@ def valid_loader(data_dir):
     
     return  valid_set
 
-def save_model(MODEL_DIR):
-    
-    inference_config = InferenceConfig()
-    # Recreate the model in inference mode
-    model = modellib.MaskRCNN(mode="inference", 
+def get_inference_model(MODEL_DIR):
+    with tf.device(DEVICE):
+        model = modellib.MaskRCNN(mode="inference", 
                           config=inference_config,
                           model_dir=MODEL_DIR)
-    # Get path to saved weights
-    # Either set a specific path or find last trained weights
-    # model_path = os.path.join(ROOT_DIR, ".h5 file name here")
-    model_path = model.find_last()
+        model_path = model.find_last()
+        assert model_path != "", "Provide path to trained weights"
+        print("Loading weights from ", model_path)
+        model.load_weights(model_path, by_name=True)
 
-    # Load trained weights (fill in path to trained weights here)
-    assert model_path != "", "Provide path to trained weights"
-    print("Loading weights from ", model_path)
-    model.load_weights(model_path, by_name=True)
+        model.keras_model.summary()
+    return model
+
+def save_model(MODEL_DIR, saved_data_dir):
     
-    print("Saving Model for Prediction")
-    # create a TensorFlow SavedModel for deployment to a SageMaker endpoint with TensorFlow Serving               
-    save_time = time.strftime("%m%d%H%M%S", time.gmtime())
-    model_dir = os.environ["SM_MODEL_DIR"]
-    model.keras_model.save(f'{model_dir}/{save_time}' )
-    
+    PATH_TO_SAVE_FROZEN_PB = saved_data_dir
+    FROZEN_NAME = 'mask_frozen_graph.pb'
+    PATH_TO_SAVE_TENSORFLOW_SERVING_MODEL = 'export/Servo/'
+    VERSION_NUMBER = 1
+
+    model = get_inference_model(MODEL_DIR)       
+    freeze_model(model.keras_model, FROZEN_NAME,PATH_TO_SAVE_FROZEN_PB)
+    make_serving_ready(os.path.join(PATH_TO_SAVE_FROZEN_PB, FROZEN_NAME),
+                         PATH_TO_SAVE_TENSORFLOW_SERVING_MODEL,
+                         VERSION_NUMBER)
+    upload_export(os.environ["SM_MODEL_DIR"])
 
 def train(model, train_set,test_set, epochs, layers,config):
     """
@@ -117,9 +129,9 @@ if __name__ == "__main__":
     epochs = args.epochs
     layers = args.layers
     weight_call = args.pretrained_weight
-    sm_model_dir =os.environ['SM_MODEL_DIR']
+    saved_data_dir =args.model_dir
     # Directory to save logs and trained model
-    MODEL_DIR = os.path.join(sm_model_dir, "logs")
+    MODEL_DIR = os.path.join(saved_data_dir, "logs")
                 
     train_set = train_loader(args.training)
     val_set  = valid_loader(args.validation)
@@ -133,4 +145,4 @@ if __name__ == "__main__":
                   layers,
                   config)
     # Saving Model
-    save_model(MODEL_DIR)
+    save_model(MODEL_DIR,saved_data_dir)

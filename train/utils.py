@@ -1,13 +1,10 @@
 import os
 import sys
+import warnings
 
 ROOT_DIR = os.path.abspath("Mask_RCNN/")
-
-# Import mrcnn libraries
 sys.path.append(ROOT_DIR) 
 from mrcnn.config import Config
-
-
 
 
 class TrainConfig(Config):
@@ -53,6 +50,5 @@ class InferenceConfig(TrainConfig):
     IMAGE_MIN_DIM = 512
     IMAGE_MAX_DIM = 512
     DETECTION_MIN_CONFIDENCE = 0.85
-    
-    
+
     
