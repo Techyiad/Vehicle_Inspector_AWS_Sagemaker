@@ -1,0 +1,12 @@
+numpy
+scipy
+Pillow
+cython
+matplotlib
+scikit-image
+h5py==2.10.0
+opencv-python==3.3.0.9
+opencv-python-headless
+imgaug
+pycocotools
+IPython[all]
