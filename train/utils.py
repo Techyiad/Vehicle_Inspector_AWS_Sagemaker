@@ -27,21 +27,21 @@ class TrainConfig(Config):
     IMAGE_MAX_DIM = 512
 
     # You can experiment with this number to see if it improves training
-    STEPS_PER_EPOCH = 500
+    STEPS_PER_EPOCH = 1000
 
     # This is how often validation is run. If you are using too much hard drive space
     # on saved models (in the MODEL_DIR), try making this value larger.
-    VALIDATION_STEPS = 5
+    VALIDATION_STEPS = 50
     
     # Matterport originally used resnet101, 
     BACKBONE = 'resnet50'
 
 
-    RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128)
+    RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128, 256, 512)
     TRAIN_ROIS_PER_IMAGE = 32
-    MAX_GT_INSTANCES = 50 
-    POST_NMS_ROIS_INFERENCE = 500 
-    POST_NMS_ROIS_TRAINING = 1000 
+    MAX_GT_INSTANCES = 200 
+    POST_NMS_ROIS_INFERENCE = 1000 
+    POST_NMS_ROIS_TRAINING = 2000 
     
     
 class InferenceConfig(TrainConfig):
