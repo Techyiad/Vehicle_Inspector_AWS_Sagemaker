@@ -37,7 +37,7 @@ class TrainConfig(Config):
     BACKBONE = 'resnet50'
 
 
-    RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128, 256, 512)
+    RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128)
     TRAIN_ROIS_PER_IMAGE = 32
     MAX_GT_INSTANCES = 200 
     POST_NMS_ROIS_INFERENCE = 1000 

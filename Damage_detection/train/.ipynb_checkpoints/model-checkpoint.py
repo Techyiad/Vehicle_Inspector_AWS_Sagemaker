@@ -11,12 +11,13 @@ from utils import TrainConfig
 
 
 
+COCO_MODEL_URL = "https://github.com/matterport/Mask_RCNN/releases/download/v2.0/mask_rcnn_coco.h5"
 
 def Mask_RCNNmodel(MODEL_DIR, weight_call):
     
     config = TrainConfig()
     # Local path to trained weights file
-    COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+    COCO_MODEL_PATH = os.getcwd()
     # Download COCO trained weights from Releases if needed
     if not os.path.exists(COCO_MODEL_PATH):
         utils.download_trained_weights(COCO_MODEL_PATH)

@@ -2,8 +2,6 @@ import os
 import sys
 import warnings
 
-ROOT_DIR = os.path.abspath("Mask_RCNN/")
-sys.path.append(ROOT_DIR) 
 from mrcnn.config import Config
 
 
