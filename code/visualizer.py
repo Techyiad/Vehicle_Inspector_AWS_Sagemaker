@@ -27,7 +27,7 @@ ROOT_DIR = os.path.abspath("train/Mask_RCNN/")
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
-from mrcnn import utils
+import saved_model_utils as utils
 
 
 ############################################################
@@ -165,9 +165,19 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             p = Polygon(verts, facecolor="none", edgecolor=color)
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
-    if auto_show:
-        plt.show()
-                
+
+    
+    img = plot_img(plt)
+    
+    return img
+        
+def plot_img(plt):
+    tmpfile = BytesIO()
+    plt.savefig(tmpfile,format='jpg',transparent=True,bbox_inches='tight', pad_inches=0)
+    tmpfile.seek(0)
+    return tmpfile
+
+
 def display_differences(image,
                         gt_box, gt_class_id, gt_mask,
                         pred_box, pred_class_id, pred_score, pred_mask,

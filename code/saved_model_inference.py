@@ -9,7 +9,7 @@ import requests
 import json
 
 host = saved_model_config.ADDRESS
-
+ 
 request = predict_pb2.PredictRequest()
 request.model_spec.name = saved_model_config.MODEL_NAME
 request.model_spec.signature_name = saved_model_config.SIGNATURE_NAME
@@ -19,7 +19,9 @@ preprocess_obj = ForwardModel(model_config)
 
 
 def detect_mask_single_image_using_grpc(image,port_grpc):
-    channel = grpc.insecure_channel(str(host) + ':' + str(port_grpc), options=[('grpc.max_receive_message_length',                  saved_model_config.GRPC_MAX_RECEIVE_MESSAGE_LENGTH)])
+    channel = grpc.insecure_channel(str(host) + ':' + str(port_grpc), options=[
+        ('grpc.max_send_message_length',saved_model_config.GRPC_MAX_RECEIVE_MESSAGE_LENGTH),
+        ('grpc.max_receive_message_length',saved_model_config.GRPC_MAX_RECEIVE_MESSAGE_LENGTH)])
     stub = prediction_service_pb2_grpc.PredictionServiceStub(channel)
     
     images = np.expand_dims(image, axis=0)
@@ -44,7 +46,7 @@ def detect_mask_single_image_using_grpc(image,port_grpc):
     request.inputs[saved_model_config.INPUT_ANCHORS].CopyFrom(
         tf.contrib.util.make_tensor_proto(anchors, shape=anchors.shape))
 
-    result = stub.Predict(request, 60.)
+    result = stub.Predict.future(request, 60).result()
     result_dict = preprocess_obj.result_to_dict(images, molded_images, windows, result)[0]
     return result_dict
 

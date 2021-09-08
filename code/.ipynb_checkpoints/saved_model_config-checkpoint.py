@@ -9,8 +9,8 @@ MY_INFERENCE_CONFIG = coco_config
 
 
 # Tensorflow Model server variable
-ADDRESS = '0.0.0.0'  
-MODEL_NAME = 'mask'
+ADDRESS = 'localhost'  
+MODEL_NAME = 'model'
 
 # TF variable name
 OUTPUT_DETECTION = 'mrcnn_detection/Reshape_1'
