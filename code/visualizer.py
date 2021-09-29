@@ -22,11 +22,6 @@ import IPython.display
 import base64
 from io import BytesIO
 
-# Root directory of the project
-ROOT_DIR = os.path.abspath("train/Mask_RCNN/")
-
-# Import Mask RCNN
-sys.path.append(ROOT_DIR)  # To find local version of the library
 import saved_model_utils as utils
 
 
@@ -84,7 +79,7 @@ def apply_mask(image, mask, color, alpha=0.5):
 
 def display_instances(image, boxes, masks, class_ids, class_names,
                       scores=None, title="",
-                      figsize=(16, 16), ax=None,
+                      figsize=(14, 14), ax=None,
                       show_mask=True, show_bbox=True,
                       colors=None, captions=None):
     """
@@ -142,28 +137,28 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             class_id = class_ids[i]
             score = scores[i] if scores is not None else None
             label = class_names[class_id]
-            caption = "{} {:.3f}".format(label, score) if score else label
+            caption = "{}".format(label)
         else:
             caption = captions[i]
-        ax.text(x1, y1 + 8, caption,
-                color='w', size=11, backgroundcolor="none")
+        if label!=class_names[1]:
+            ax.text(x1, y1 + 8, caption,
+                    color='w', size=16, bbox=dict(facecolor='black', alpha=0.3), backgroundcolor="none")
+            # Mask
+            mask = masks[:, :, i]
+            if show_mask:
+                masked_image = apply_mask(masked_image, mask, color)
 
-        # Mask
-        mask = masks[:, :, i]
-        if show_mask:
-            masked_image = apply_mask(masked_image, mask, color)
-
-        # Mask Polygon
-        # Pad to ensure proper polygons for masks that touch image edges.
-        padded_mask = np.zeros(
-            (mask.shape[0] + 2, mask.shape[1] + 2), dtype=np.uint8)
-        padded_mask[1:-1, 1:-1] = mask
-        contours = find_contours(padded_mask, 0.5)
-        for verts in contours:
-            # Subtract the padding and flip (y, x) to (x, y)
-            verts = np.fliplr(verts) - 1
-            p = Polygon(verts, facecolor="none", edgecolor=color)
-            ax.add_patch(p)
+            # Mask Polygon
+            # Pad to ensure proper polygons for masks that touch image edges.
+            padded_mask = np.zeros(
+                (mask.shape[0] + 2, mask.shape[1] + 2), dtype=np.uint8)
+            padded_mask[1:-1, 1:-1] = mask
+            contours = find_contours(padded_mask, 0.5)
+            for verts in contours:
+                # Subtract the padding and flip (y, x) to (x, y)
+                verts = np.fliplr(verts) - 1
+                p = Polygon(verts, facecolor="none", edgecolor=color)
+                ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
 
     
@@ -172,8 +167,9 @@ def display_instances(image, boxes, masks, class_ids, class_names,
     return img
         
 def plot_img(plt):
+    plt.margins(x=0,y=0,tight=True)
     tmpfile = BytesIO()
-    plt.savefig(tmpfile,format='jpg',transparent=True,bbox_inches='tight', pad_inches=0)
+    plt.savefig(tmpfile,format='png',transparent=True,pad_inches=0.0, bbox_inches='tight')
     tmpfile.seek(0)
     return tmpfile
 

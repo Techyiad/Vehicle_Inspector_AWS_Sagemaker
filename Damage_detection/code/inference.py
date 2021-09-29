@@ -19,6 +19,8 @@ import os
 from saved_model_inference import detect_mask_single_image_using_grpc
 from saved_model_inference import detect_mask_single_image_using_restapi
 
+import visualizer
+
 # default to use of GRPC
 PREDICT_USING_GRPC = os.environ.get('PREDICT_USING_GRPC', 'true')
 print('PREDICT_USING_GRPC')
@@ -50,7 +52,7 @@ print(f'num_inferences: {num_inferences}')
 Context = namedtuple('Context',
                      'model_name, model_version, method, rest_uri, grpc_uri, '
                      'custom_attributes, request_content_type, accept_header')
-
+categories = np.array([0,'none','low', 'medium', 'high'])
 num_inferences = 0
 print(f'num_inferences: {num_inferences}')
 
@@ -79,16 +81,32 @@ def handler(data, context):
 
     print("*" * 60)
     print("RESULTS:")
-    print(result)
+#     print(result)
+    print("*" * 60)
+    print("VISUALIZING")  
+    im2arr = np.array(image)
+    viz_img = visualizer.display_instances(im2arr,
+                                           np.array(result['rois']),
+                                           np.array(result['mask']),
+                                           np.array(result['class']),
+                                           categories, 
+                                           result['scores'])
+    
+    encoded_img = base64.b64encode(viz_img.getvalue()).decode('utf-8')
     print("*" * 60)
     
+    if 'mask' in result: del result['mask']
     end_time   = time.time()
     latency    = int((end_time - start_time) * 1000)
     print(f'=== TFS invoke took: {latency} ms')
+    im_data = {
+        "data":result,
+        "image":encoded_img
+    }
     
     print('complete')
     print(context.accept_header)
-    prediction = json.dumps(result, cls=NumpyArrayEncoder)
+    prediction = json.dumps(im_data, cls=NumpyArrayEncoder)
     response_content_type = context.accept_header
     return prediction, response_content_type
 

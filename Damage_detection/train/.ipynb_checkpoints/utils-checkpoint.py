@@ -32,7 +32,7 @@ class TrainConfig(Config):
     VALIDATION_STEPS = 50
     
     # Matterport originally used resnet101, 
-    BACKBONE = 'resnet50'
+#     BACKBONE = 'resnet50'
 
 
     RPN_ANCHOR_SCALES = (8, 16, 32, 64, 128)
@@ -47,5 +47,5 @@ class InferenceConfig(TrainConfig):
     IMAGES_PER_GPU = 1
     IMAGE_MIN_DIM = 512
     IMAGE_MAX_DIM = 512
-    DETECTION_MIN_CONFIDENCE = 0.85
+#     DETECTION_MIN_CONFIDENCE = 0.85
 
