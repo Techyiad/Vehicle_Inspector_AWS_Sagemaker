@@ -169,7 +169,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
 def plot_img(plt):
     plt.margins(x=0,y=0,tight=True)
     tmpfile = BytesIO()
-    plt.savefig(tmpfile, bbox_inches='tight', format='eps', dpi=1000)
+    plt.savefig(tmpfile, format='png',transparent=True,pad_inches=0.0, bbox_inches='tight')
     tmpfile.seek(0)
     return tmpfile
 

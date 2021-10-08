@@ -3,7 +3,10 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 print(f'TensorFlow version is: {tf.version.VERSION}')
 
+import gzip
+import urllib.request
 import io
+from io import BytesIO
 import base64
 import json
 from json import JSONEncoder
@@ -15,6 +18,7 @@ import time
 import requests
 import sys
 import os
+import zlib
 
 from saved_model_inference import detect_mask_single_image_using_grpc
 from saved_model_inference import detect_mask_single_image_using_restapi
@@ -56,9 +60,14 @@ categories = np.array([0,'none','low', 'medium', 'high'])
 num_inferences = 0
 print(f'num_inferences: {num_inferences}')
 
-Context = namedtuple('Context',
-                     'model_name, model_version, method, rest_uri, grpc_uri, '
-                     'custom_attributes, request_content_type, accept_header')
+
+def gzip_b64encode(data):
+    compressed = BytesIO()
+    with gzip.GzipFile(fileobj=compressed, mode='w') as f:
+        json_response = json.dumps(data)
+        f.write(json_response.encode('utf-8'))
+    return base64.b64encode(compressed.getvalue()).decode('ascii')
+
 
 
 def handler(data, context):
@@ -92,21 +101,25 @@ def handler(data, context):
                                            categories, 
                                            result['scores'])
     
-    encoded_img = base64.b64encode(viz_img.getvalue()).decode('utf-8')
-    print("*" * 60)
     
     if 'mask' in result: del result['mask']
-    end_time   = time.time()
-    latency    = int((end_time - start_time) * 1000)
-    print(f'=== TFS invoke took: {latency} ms')
+    encoded_img = base64.b64encode(viz_img.getvalue()).decode('utf-8')
+  
     im_data = {
         "data":result,
         "image":encoded_img
     }
+
+    print("*" * 60)
     
+
+    end_time   = time.time()
+    latency    = int((end_time - start_time) * 1000)
+    print(f'=== TFS invoke took: {latency} ms')
+
     print('complete')
     print(context.accept_header)
-    prediction = json.dumps(im_data, cls=NumpyArrayEncoder)
+    prediction =json.dumps(im_data, cls=NumpyArrayEncoder)
     response_content_type = context.accept_header
     return prediction, response_content_type
 
